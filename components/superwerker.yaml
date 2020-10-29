@@ -10,6 +10,9 @@ Parameters:
     Default: ""
   Domain:
     Type: String
+  Subdomain:
+    Default: aws
+    Type: String
   IncludeControlTower:
     AllowedValues:
       - true
@@ -161,6 +164,7 @@ Resources:
       TemplateURL: !Sub ${TemplateUrlPrefix}/components/rootmail.yaml
       Parameters:
         Domain: !Ref Domain
+        Subdomain: !Ref Subdomain
 
   SecurityHub:
     Condition: IncludeSecurityHub
