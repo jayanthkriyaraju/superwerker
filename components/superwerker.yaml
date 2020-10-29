@@ -166,10 +166,6 @@ Resources:
           - IncludeRootMail
           - !Sub '${Subdomain}.${Domain}'
           - ''
-        RootMailDelegationTarget: !If
-          - IncludeRootMail
-          - !GetAtt RootMail.Outputs.DelegationTarget
-          - ''
 
   RootMail:
     Condition: IncludeRootMail
