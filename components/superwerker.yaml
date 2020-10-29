@@ -157,6 +157,20 @@ Resources:
     Properties:
       TemplateURL: !Sub ${TemplateUrlPrefix}/components/guardduty.yaml
 
+  Readme:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub ${TemplateUrlPrefix}/components/readme.yaml
+      Parameters:
+        SuperwerkerDomain: !If
+          - IncludeRootMail
+          - !Sub '${Subdomain}.${Domain}'
+          - ''
+        RootMailDelegationTarget: !If
+          - IncludeRootMail
+          - !GetAtt RootMail.Outputs.DelegationTarget
+          - ''
+
   RootMail:
     Condition: IncludeRootMail
     Type: AWS::CloudFormation::Stack
