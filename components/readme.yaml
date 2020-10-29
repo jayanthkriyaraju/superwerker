@@ -17,6 +17,8 @@ Resources:
             Schedule: rate(1 minute)
       Handler: index.handler
       Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: 'superwerker/*'
         - Version: 2012-10-17
           Statement:
             - Effect: Allow
@@ -32,10 +34,20 @@ Resources:
         from datetime import datetime
 
         cw = boto3.client("cloudwatch")
+        ssm = boto3.client("ssm")
 
         def handler(event, context):
 
-          dns_delegation_text = """
+          superwerker_config = {}
+          for ssm_parameter in ssm.get_parameters(
+            Names=[
+              '/superwerker/domain_name_servers'
+            ]
+          )['Parameters']:
+            superwerker_config[ssm_parameter['Name']] = ssm_parameter['Value']
+
+          if '/superwerker/domain_name_servers' in superwerker_config:
+            dns_delegation_text = """
           ### ❌ Setup DNS Delegation to your chosen domain `{domain}`
 
           Please create the following NS records for `{domain}`:
@@ -43,11 +55,12 @@ Resources:
           - `{ns[1]}`
           - `{ns[2]}`
           - `{ns[3]}`
-
           """.format(
             domain=os.environ['SUPERWERKER_DOMAIN'],
-            ns=['a', 'b', 'c', 'd'],
+            ns=superwerker_config['/superwerker/domain_name_servers'].split(','),
           )
+          else:
+            dns_delegation_text = '### DNS Setup pending'
 
           markdown = """
 
