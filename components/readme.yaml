@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+
+  DashboardGeneratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Events:
+        Schedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 minute)
+      Handler: index.handler
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action: cloudwatch:PutDashboard
+              Resource: !Sub arn:${AWS::Partition}:cloudwatch::${AWS::AccountId}:dashboard/superwerker-README
+      InlineCode: |
+        import boto3
+        import json
+        from datetime import datetime
+
+        cw = boto3.client("cloudwatch")
+
+        def handler(event, context):
+
+          markdown = """
+
+          # Hello world
+          It is now exactly _{time}_ in AWS.
+
+          """.format(
+            time=datetime.now(),
+          )
+
+          body = {
+            "widgets": [
+              {
+                "type": "text",
+                "x": 0,
+                "y": 0,
+                "width": 24,
+                "height": 20,
+                "properties": {
+                  "markdown": markdown,
+                }
+              },
+              {
+                "type": "alarm",
+                "x": 0,
+                "y": 10,
+                "width": 24,
+                "height": 2,
+                "properties": {
+                  "title": "DNS Zone delegation for root emails ready",
+                  "alarms": [
+                    "arn:aws:cloudwatch:eu-west-1:970186278685:alarm:custom-RootmailReadyAlert-X4FRISK7ZN3T"
+                  ]
+                }
+              }
+            ]
+          }
+
+          cw.put_dashboard(
+            DashboardName='superwerker-README',
+            DashboardBody=json.dumps(body),
+          )
+
+        def log(msg):
+          print(json.dumps(msg), flush=True)
+
+      Runtime: python3.7
+      Timeout: 60
