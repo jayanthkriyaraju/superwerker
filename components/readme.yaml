@@ -1,6 +1,13 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 
+Parameters:
+  SuperwerkerDomain:
+    Type: String
+
+  RootMailDelegationTarget:
+    Type: CommaDelimitedList
+
 Resources:
 
   DashboardGeneratorFunction:
@@ -18,22 +25,44 @@ Resources:
             - Effect: Allow
               Action: cloudwatch:PutDashboard
               Resource: !Sub arn:${AWS::Partition}:cloudwatch::${AWS::AccountId}:dashboard/superwerker-README
+      Environment:
+        Variables:
+          SUPERWERKER_DOMAIN: !Ref SuperwerkerDomain
+          ROOTMAIL_DELEGATION_TARGET: !Join [',', !Ref RootMailDelegationTarget]
       InlineCode: |
         import boto3
         import json
+        import os
         from datetime import datetime
 
         cw = boto3.client("cloudwatch")
 
         def handler(event, context):
 
-          markdown = """
+          dns_delegation_text = """
+          ### ❌ Setup DNS Delegation to your chosen domain `{domain}`
 
-          # Hello world
-          It is now exactly _{time}_ in AWS.
+          Please create the following NS records for `{domain}`:
+          - `{ns[0]}`
+          - `{ns[1]}`
+          - `{ns[2]}`
+          - `{ns[3]}`
 
           """.format(
-            time=datetime.now(),
+            domain=os.environ['SUPERWERKER_DOMAIN'],
+            ns=os.environ['ROOTMAIL_DELEGATION_TARGET'].split(','),
+          )
+
+          markdown = """
+
+          # Welcome to superwerker
+
+          ## Setup
+
+          {dns_delegation}
+
+          """.format(
+            dns_delegation=dns_delegation_text
           )
 
           body = {
