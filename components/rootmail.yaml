@@ -381,6 +381,7 @@ Resources:
   RootmailReadyAlert:
     Type: AWS::CloudWatch::Alarm
     Properties:
+      AlarmName: superwerker-RootmailReady
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
         - Name: FunctionName

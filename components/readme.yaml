@@ -11,10 +11,20 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Events:
-        Schedule:
-          Type: Schedule
+        EmailHealth:
+          Type: CloudWatchEvent
           Properties:
-            Schedule: rate(1 minute)
+            Pattern:
+              detail-type:
+                - CloudWatch Alarm State Change
+              source:
+                - aws.cloudwatch
+              detail:
+                alarmName:
+                  - superwerker-RootmailReady
+                state:
+                  value:
+                    - OK
       Handler: index.handler
       Policies:
         - SSMParameterReadPolicy:
